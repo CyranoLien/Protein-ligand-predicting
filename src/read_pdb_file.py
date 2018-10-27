@@ -27,9 +27,9 @@ def read_pdb(filename):
 
         atomtype = stripped_line[76:78].strip()
         if atomtype == 'C':
-            atomtype_list.append(0)  # 'h' means hydrophobic
+            atomtype_list.append(0.001)  # 'h' means hydrophobic
         else:
-            atomtype_list.append(1)  # 'p' means polar
+            atomtype_list.append(-0.001)  # 'p' means polar
 
     return X_list, Y_list, Z_list, atomtype_list
 
@@ -38,8 +38,8 @@ def extract_data():
     output = []
     for i in range(1, M+1):
         for j in range(1, N+1):
-            X_list, Y_list, Z_list, atomtype_list = read_pdb('../training_data/%s_pro_cg.pdb' % str(i).zfill(4))
-            X_list2, Y_list2, Z_list2, atomtype_list2 = read_pdb('../training_data/%s_lig_cg.pdb' % str(j).zfill(4))
+            X_list, Y_list, Z_list, atomtype_list = read_pdb('../data/training_data/%s_pro_cg.pdb' % str(i).zfill(4))
+            X_list2, Y_list2, Z_list2, atomtype_list2 = read_pdb('../data/training_data/%s_lig_cg.pdb' % str(j).zfill(4))
 
             pro = np.array([X_list, Y_list, Z_list, atomtype_list])
             # print(pro.shape)
@@ -58,7 +58,7 @@ def extract_data():
 
     return sort_data(input[0])
 
-def compute_dist(vec1, vec2):
+def compute_vec_dist(vec1, vec2):
     return np.linalg.norm(np.array(vec1) - np.array(vec2))
 
 def sort_data(data):
@@ -67,7 +67,7 @@ def sort_data(data):
     vec_o = np.delete(min_v, 3)
     # sort the data frame by the distance to vec_o, then drop the dist
     df = pd.DataFrame(data, columns=['x', 'y', 'z', 'type'])
-    df['dist'] = df.apply(lambda x: compute_dist([x['x'], x['y'], x['z']], vec_o), axis = 1)
+    df['dist'] = df.apply(lambda x: compute_vec_dist([x['x'], x['y'], x['z']], vec_o), axis = 1)
     df = df.sort_values(by=['dist']).drop(columns=['dist'])
 
     print(df.values)

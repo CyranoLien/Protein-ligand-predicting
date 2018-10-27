@@ -1,10 +1,9 @@
 
-output=[]
+output=[0.001,-0.001,0.001]
 
 
-for i in range(5):
-    for j in range(5):
-        print(i, j)
-        output.append(1 if i==j else 0)
+edit_type = lambda x: 1 if x>0 else -1
 
+output[1] = edit_type(output[1])
 print(output)
+
