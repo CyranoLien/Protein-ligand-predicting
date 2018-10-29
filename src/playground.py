@@ -1,9 +1,16 @@
+import numpy as np
+a = [[[1,2,3],[2,3,4],[3,4,5]]]
 
-output=[0.001,-0.001,0.001]
+# b= np.array(a)
+#
+# for i in a:
+#     lig = i
+#     j = 0
+#
+# print(b.reshape(20,))
 
 
-edit_type = lambda x: 1 if x>0 else -1
-
-output[1] = edit_type(output[1])
-print(output)
-
+a = np.array(a)
+print(a.shape)
+a = np.array(a)
+print(a.shape)

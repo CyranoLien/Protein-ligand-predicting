@@ -33,6 +33,7 @@ def read_pdb(filename):
 
     return X_list, Y_list, Z_list, atomtype_list
 
+
 def extract_data():
     input = []
     output = []
@@ -58,8 +59,10 @@ def extract_data():
 
     return sort_data(input[0])
 
+
 def compute_vec_dist(vec1, vec2):
     return np.linalg.norm(np.array(vec1) - np.array(vec2))
+
 
 def sort_data(data):
     # get the minimum values of x, y, z as vec_o
@@ -76,8 +79,6 @@ def sort_data(data):
 
 def find_path():
     pass
-
-
 
 
 if __name__ == '__main__':
