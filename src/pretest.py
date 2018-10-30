@@ -160,11 +160,11 @@ def create_mlp_test(tree_list):
 
 if __name__ == '__main__':
 
-    # create_CNN_test(0, 24)
+    create_CNN_test(0, 24)
 
     # store_tree()
-    with open('../data/middle_data/tree_list_test.bin', 'rb') as f:
-        tree_list = pickle.load(f)
-    print('Tree info loaded successfully!')
-
-    create_mlp_test(tree_list)
+    # with open('../data/middle_data/tree_list_test.bin', 'rb') as f:
+    #     tree_list = pickle.load(f)
+    # print('Tree info loaded successfully!')
+    #
+    # create_mlp_test(tree_list)

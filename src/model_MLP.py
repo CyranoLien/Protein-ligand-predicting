@@ -60,6 +60,10 @@ def create_clique_data():
         pickle.dump(new_vout, f)
 
 
+def create_clique_test():
+    pass
+
+
 def model_mlp():
     model = Sequential()
     model.add(Masking(mask_value=-999, batch_input_shape=(1, 200, 1)))
@@ -81,13 +85,15 @@ def start_train(x_train, y_train, x_valid, y_valid):
     model = model_mlp()
     adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.00005)
     model.compile(loss='mean_squared_error', optimizer=adam, metrics=['accuracy'])
-    hist = model.fit(x=tin, y=tout, epochs=10, batch_size=1, verbose=1, validation_data=(vin, vout))
+    hist = model.fit(x=tin, y=tout, epochs=1, batch_size=1, verbose=1, validation_data=(vin, vout))
+
+    a = model.predict(vin, batch_size=1)
+
     # loss, accuracy = model.evaluate(x=vin, y=vout)
     # print('Test loss is {:.4f}'.format(loss))
     # print('Test accuracy is {:.4f}'.format(accuracy))
 
-    return hist.history
-
+    return a
 
 
 def plot_hist(df, name, attr):
@@ -121,10 +127,10 @@ if __name__ == '__main__':
 
 
     d = start_train(x_train, y_train, x_valid, y_valid)
-    df = DataFrame(data=d)
-    epoch = df.index.map(lambda x: x + 1)
-    df['epoch'] = epoch
-    plot_hist(df, 'mlp', 'acc')
-    plot_hist(df, 'mlp', 'loss')
+    # df = DataFrame(data=d)
+    # epoch = df.index.map(lambda x: x + 1)
+    # df['epoch'] = epoch
+    # plot_hist(df, 'mlp', 'acc')
+    # plot_hist(df, 'mlp', 'loss')
 
 

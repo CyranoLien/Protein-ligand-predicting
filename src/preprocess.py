@@ -220,22 +220,22 @@ if __name__ == '__main__':
     # create_mlp_valid(tree_list, 2700)
 
 
-    # create_CNN_train(200)
+    create_CNN_train(3000)
     #
-    # create_CNN_valid(2700, 2720)
+    create_CNN_valid(2990, 3000)
 
 
 
 
-    with open('../data/middle_data/train_input.bin', 'rb') as f:
-        train_input = pickle.load(f)
-    with open('../data/middle_data/train_output.bin', 'rb') as f:
-        train_output = pickle.load(f)
-    with open('../data/middle_data/valid_input.bin', 'rb') as f:
-        valid_input = pickle.load(f)
-    with open('../data/middle_data/valid_output.bin', 'rb') as f:
-        valid_output = pickle.load(f)
-    print('Data info loaded successfully!')
+    # with open('../data/middle_data/train_input.bin', 'rb') as f:
+    #     train_input = pickle.load(f)
+    # with open('../data/middle_data/train_output.bin', 'rb') as f:
+    #     train_output = pickle.load(f)
+    # with open('../data/middle_data/valid_input.bin', 'rb') as f:
+    #     valid_input = pickle.load(f)
+    # with open('../data/middle_data/valid_output.bin', 'rb') as f:
+    #     valid_output = pickle.load(f)
+    # print('Data info loaded successfully!')
 
     # for i in range(len(valid_input)):
     #     print(i)
