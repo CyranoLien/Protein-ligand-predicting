@@ -204,17 +204,17 @@ def create_mlp_valid(tree_list, N):
 
 
 if __name__ == '__main__':
-    """
-    store_tree()
+
+    #store_tree()
 
     with open('../data/middle_data/tree_list.bin', 'rb') as f:
          tree_list = pickle.load(f)
     print('Tree info loaded successfully!')
 
     create_mlp_train(tree_list, 2700)
-    create_mlp_valid(tree_list, 2700)
 
 
+    """
     create_CNN_train(3000)
     create_CNN_valid(2990, 3000)
 

@@ -141,12 +141,12 @@ def create_mlp_test(tree_list):
     # validation data: store every pair
     test_input = []
 
-    for i in tqdm(range(1, 825)):
+    for i in tqdm(range(1, 31)):
         pro = extract_data2(i, 'pro')
         # get pro centroid
         origin_point_pro = find_mean_point(pro)
 
-        for j in range(1, 825):
+        for j in range(1, 31):
             # recompute lig coordinates
             lig = extract_data2(j, 'lig')
             lig = transform_data_tree(lig, origin_point_pro)
