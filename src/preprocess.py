@@ -80,7 +80,7 @@ def sample_neg(num, i, N):
     # Sample n different ligs
     flag = True
     while flag:
-        a = range(1, N+1)
+        a = range(1, N + 1)
         neg_sample = random.sample(a, num)
         if i not in neg_sample:
             flag = False
@@ -92,7 +92,7 @@ def create_CNN_train(num):
     cnn_lig_train = []
     cnn_out_train = []
 
-    for i in tqdm(range(1, num+1)):
+    for i in tqdm(range(1, num + 1)):
         cnn_pro_train.append(prepare_CNN(i, 'pro'))
         cnn_lig_train.append(prepare_CNN(i, 'lig'))
         cnn_out_train.append([1])
@@ -103,11 +103,11 @@ def create_CNN_train(num):
             cnn_lig_train.append(prepare_CNN(sample, 'lig'))
             cnn_out_train.append([-1])
 
-    with open ('../data/cnn_data/cnn_pro_train.bin', 'wb') as f:
+    with open('../data/cnn_data/cnn_pro_train.bin', 'wb') as f:
         pickle.dump(cnn_pro_train, f)
-    with open ('../data/cnn_data/cnn_lig_train.bin', 'wb') as f:
+    with open('../data/cnn_data/cnn_lig_train.bin', 'wb') as f:
         pickle.dump(cnn_lig_train, f)
-    with open ('../data/cnn_data/cnn_out_train.bin', 'wb') as f:
+    with open('../data/cnn_data/cnn_out_train.bin', 'wb') as f:
         pickle.dump(cnn_out_train, f)
     print('\nCNN training data stored successfully!\n')
 
@@ -118,8 +118,8 @@ def create_CNN_valid(num1, num2):
     cnn_out_valid = []
 
     print('Begin storing valid dataset')
-    for i in tqdm(range(num1+1, num2+1)):
-        for j in range(num1+1, num2+1):
+    for i in tqdm(range(num1 + 1, num2 + 1)):
+        for j in range(num1 + 1, num2 + 1):
             cnn_pro_valid.append(prepare_CNN(i, 'pro'))
             cnn_lig_valid.append(prepare_CNN(j, 'lig'))
             if i == j:
@@ -127,14 +127,13 @@ def create_CNN_valid(num1, num2):
             else:
                 cnn_out_valid.append([-1])
 
-    with open ('../data/cnn_data/cnn_pro_valid.bin', 'wb') as f:
+    with open('../data/cnn_data/cnn_pro_valid.bin', 'wb') as f:
         pickle.dump(cnn_pro_valid, f)
-    with open ('../data/cnn_data/cnn_lig_valid.bin', 'wb') as f:
+    with open('../data/cnn_data/cnn_lig_valid.bin', 'wb') as f:
         pickle.dump(cnn_lig_valid, f)
-    with open ('../data/cnn_data/cnn_out_valid.bin', 'wb') as f:
+    with open('../data/cnn_data/cnn_out_valid.bin', 'wb') as f:
         pickle.dump(cnn_out_valid, f)
     print('\nCNN training data stored successfully!\n')
-
 
 
 def store_tree():
@@ -147,7 +146,7 @@ def store_tree():
 
             tree_list.append(build_KDTree(pro))
         pickle.dump(tree_list, f)
-        
+
     print('Info stored successfully!')
 
 
@@ -200,58 +199,50 @@ def create_mlp_valid(tree_list, N):
             else:
                 valid_output.append([-1])
 
-    with open('../data/middle_data/valid_input.bin', 'wb') as f:
-        pickle.dump(valid_input, f)
-    with open('../data/middle_data/valid_output.bin', 'wb') as f:
-        pickle.dump(valid_output, f)
     print('\nvalidation data constructed successfully!\n')
-
+    return valid_input, valid_output
 
 
 if __name__ == '__main__':
+    """
+    store_tree()
 
-    # store_tree()
-    #
-    # with open('../data/middle_data/tree_list.bin', 'rb') as f:
-    #     tree_list = pickle.load(f)
-    # print('Tree info loaded successfully!')
-    #
-    # create_mlp_train(tree_list, 2700)
-    # create_mlp_valid(tree_list, 2700)
+    with open('../data/middle_data/tree_list.bin', 'rb') as f:
+         tree_list = pickle.load(f)
+    print('Tree info loaded successfully!')
+
+    create_mlp_train(tree_list, 2700)
+    create_mlp_valid(tree_list, 2700)
 
 
     create_CNN_train(3000)
-    #
     create_CNN_valid(2990, 3000)
 
+    with open('../data/middle_data/train_input.bin', 'rb') as f:
+        train_input = pickle.load(f)
+    with open('../data/middle_data/train_output.bin', 'rb') as f:
+        train_output = pickle.load(f)
+    with open('../data/middle_data/valid_input.bin', 'rb') as f:
+        valid_input = pickle.load(f)
+    with open('../data/middle_data/valid_output.bin', 'rb') as f:
+        valid_output = pickle.load(f)
+    print('Data info loaded successfully!')
 
+    for i in range(len(valid_input)):
+        print(i)
+        print(valid_input[i])
+        if i > 5:
+            break
 
+    pass
 
-    # with open('../data/middle_data/train_input.bin', 'rb') as f:
-    #     train_input = pickle.load(f)
-    # with open('../data/middle_data/train_output.bin', 'rb') as f:
-    #     train_output = pickle.load(f)
-    # with open('../data/middle_data/valid_input.bin', 'rb') as f:
-    #     valid_input = pickle.load(f)
-    # with open('../data/middle_data/valid_output.bin', 'rb') as f:
-    #     valid_output = pickle.load(f)
-    # print('Data info loaded successfully!')
+    print('\n\n*****************************************\nThe KDTree answer is:\n')
+    output = find_nearest_atoms_KDTree(t, lig, 3)
+    print(np.array(output))
 
-    # for i in range(len(valid_input)):
-    #     print(i)
-    #     print(valid_input[i])
-    #     if i > 5:
-    #         break
-    #
-    # pass
-
-
-    # print('\n\n*****************************************\nThe KDTree answer is:\n')
-    # output = find_nearest_atoms_KDTree(t, lig, 3)
-    # print(np.array(output))
-    #
-    # print("\n\n*****************************************\nThe YMT's answer is:\n")
-    # print(find_nearest_atoms_YMT(pro, lig, 3))
+    print("\n\n*****************************************\nThe YMT's answer is:\n")
+    print(find_nearest_atoms_YMT(pro, lig, 3))
+    """
 
 
 

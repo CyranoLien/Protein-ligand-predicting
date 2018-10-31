@@ -152,19 +152,16 @@ def create_mlp_test(tree_list):
             lig = transform_data_tree(lig, origin_point_pro)
             test_input.append(find_nearest_atoms_KDTree(tree_list[i - 1], lig, NUM_NEAR))
 
-    with open('../data/middle_data/test_input.bin', 'wb') as f:
-        pickle.dump(test_input, f)
-
     print('\ntest data constructed successfully!\n')
+
+    return test_input
 
 
 if __name__ == '__main__':
 
-    create_CNN_test(0, 24)
-
-    # store_tree()
-    # with open('../data/middle_data/tree_list_test.bin', 'rb') as f:
-    #     tree_list = pickle.load(f)
-    # print('Tree info loaded successfully!')
-    #
-    # create_mlp_test(tree_list)
+    #create_CNN_test(0, 24)
+    store_tree()
+    with open('../data/middle_data/tree_list_test.bin', 'rb') as f:
+        tree_list = pickle.load(f)
+    print('Tree info loaded successfully!')
+    #reate_mlp_test(tree_list)
