@@ -10,8 +10,8 @@ from keras.layers import Dense, LSTM, SimpleRNN
 from sklearn.metrics import mean_squared_error
 from keras.optimizers import RMSprop, Adam
 import heapq
-from preprocess import *
-from pretest import *
+from preprocess_train import *
+from preprocess_test import *
 
 # Create model
 def create_lstm_model(state):
@@ -38,11 +38,6 @@ if __name__ == '__main__':
     print('Tree info loaded successfully!')
 
     valid_input, y_valid = create_mlp_valid(tree_list, begin=2700, end=3000)
-
-
-
-
-
 
 
 
@@ -93,7 +88,7 @@ if __name__ == '__main__':
     model = create_lstm_model(state=False)
     adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.00005)
     model.compile(loss='mean_squared_error', optimizer=adam)
-    history = model.fit(x=x_train, y=y_train, epochs=10, batch_size=32, verbose=1, validation_data=(x_valid, y_valid))
+    history = model.fit(x=x_train, y=y_train, epochs=10, batch_size=1, verbose=1, validation_data=(x_valid, y_valid))
 
     # plot loss
     train_loss = history.history['loss']

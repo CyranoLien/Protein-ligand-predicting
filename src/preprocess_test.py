@@ -1,5 +1,4 @@
 import pickle
-import numpy as np
 from kdtree import *
 from tqdm import tqdm
 
@@ -53,24 +52,19 @@ def find_mean_point(data):
     return vec_o
 
 
-def transform_data(data, meanpoint):
+############### methods used in cnn ###############
+def normalize_centroid_throwtype(data, meanpoint):
     transform_data = data[:, :3] - meanpoint
 
     # scaling_data = np.trunc(transform_data / 3).astype(np.int)
     return transform_data
 
 
-def transform_data_tree(data, meanpoint):
-    mean = np.append(meanpoint, 0)
-    t = data - mean
-    return t
-
-
 def prepare_CNN(index, type):
     if type is 'pro':
         pro = extract_data2(index, 'pro')
         origin_point_pro = find_mean_point(pro)
-        pro = transform_data(pro, origin_point_pro)
+        pro = normalize_centroid_throwtype(pro, origin_point_pro)
         # print(origin_point_pro)
         cnn_pro = np.zeros((27, 27, 27, 1))
         for atom in pro:
@@ -86,7 +80,7 @@ def prepare_CNN(index, type):
     elif type is 'lig':
         lig = extract_data2(index, 'lig')
         origin_point_lig = find_mean_point(lig)
-        lig = transform_data(lig, origin_point_lig)
+        lig = normalize_centroid_throwtype(lig, origin_point_lig)
         # print(origin_point_lig)
         cnn_lig = np.zeros((6, 6, 6, 1))
         for atom in lig:
@@ -103,24 +97,28 @@ def prepare_CNN(index, type):
         print('Wrong type!')
 
 
-def create_CNN_test(num1, num2):
+def create_CNN_test(num):
     cnn_pro_test = []
-    cnn_lig_test= []
-
+    cnn_lig_test = []
 
     print('Begin storing test dataset')
-    for i in tqdm(range(num1+1, num2+1)):
-        for j in range(num1+1, num2+1):
-            cnn_pro_test.append(prepare_CNN(i, 'pro'))
-            cnn_lig_test.append(prepare_CNN(j, 'lig'))
-
+    for i in tqdm(range(1, num + 1)):
+        cnn_pro_test.append(prepare_CNN(i, 'pro'))
+        cnn_lig_test.append(prepare_CNN(i, 'lig'))
 
     with open ('../data/cnn_data/cnn_pro_test.bin', 'wb') as f:
         pickle.dump(cnn_pro_test, f)
     with open ('../data/cnn_data/cnn_lig_test.bin', 'wb') as f:
         pickle.dump(cnn_lig_test, f)
-
     print('\nCNN testing data stored successfully!\n')
+
+
+############### methods used in mlp/lstm ###############
+
+def normalize_centroid_keeptype(data, meanpoint):
+    mean = np.append(meanpoint, 0)
+    t = data - mean
+    return t
 
 
 def store_tree():
@@ -129,7 +127,7 @@ def store_tree():
         for i in tqdm(range(1, 824 + 1)):
             pro = extract_data2(i, 'pro')
             origin_point_pro = find_mean_point(pro)
-            pro = transform_data_tree(pro, origin_point_pro)
+            pro = normalize_centroid_keeptype(pro, origin_point_pro)
 
             tree_list.append(build_KDTree(pro))
         pickle.dump(tree_list, f)
@@ -149,7 +147,7 @@ def create_mlp_test(tree_list):
         for j in range(1, 31):
             # recompute lig coordinates
             lig = extract_data2(j, 'lig')
-            lig = transform_data_tree(lig, origin_point_pro)
+            lig = normalize_centroid_keeptype(lig, origin_point_pro)
             test_input.append(find_nearest_atoms_KDTree(tree_list[i - 1], lig, NUM_NEAR))
 
     print('\ntest data constructed successfully!\n')
@@ -159,9 +157,10 @@ def create_mlp_test(tree_list):
 
 if __name__ == '__main__':
 
-    #create_CNN_test(0, 24)
-    store_tree()
-    with open('../data/middle_data/tree_list_test.bin', 'rb') as f:
-        tree_list = pickle.load(f)
-    print('Tree info loaded successfully!')
+    create_CNN_test(824)
+
+    # store_tree()
+    # with open('../data/middle_data/tree_list_test.bin', 'rb') as f:
+    #     tree_list = pickle.load(f)
+    # print('Tree info loaded successfully!')
     #reate_mlp_test(tree_list)

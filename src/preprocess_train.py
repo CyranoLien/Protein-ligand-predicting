@@ -26,19 +26,6 @@ def find_mean_point(data):
     return vec_o
 
 
-def transform_data(data, meanpoint):
-    transform_data = data[:, :3] - meanpoint
-
-    # scaling_data = np.trunc(transform_data / 3).astype(np.int)
-    return transform_data
-
-
-def transform_data_tree(data, meanpoint):
-    mean = np.append(meanpoint, 0)
-    t = data - mean
-    return t
-
-
 def sample_neg(num, i, N):
     # Sample n different ligs
     flag = True
@@ -50,11 +37,20 @@ def sample_neg(num, i, N):
     return neg_sample
 
 
+
+############### methods used in cnn ###############
+def normalize_centroid_throwtype(data, meanpoint):
+    transform_data = data[:, :3] - meanpoint
+
+    # scaling_data = np.trunc(transform_data / 3).astype(np.int)
+    return transform_data
+
+
 def prepare_CNN(index, type):
     if type is 'pro':
         pro = extract_data(index, 'pro')
         origin_point_pro = find_mean_point(pro)
-        pro = transform_data(pro, origin_point_pro)
+        pro = normalize_centroid_throwtype(pro, origin_point_pro)
         # print(origin_point_pro)
         cnn_pro = np.zeros((27, 27, 27, 1))
         for atom in pro:
@@ -70,7 +66,7 @@ def prepare_CNN(index, type):
     elif type is 'lig':
         lig = extract_data(index, 'lig')
         origin_point_lig = find_mean_point(lig)
-        lig = transform_data(lig, origin_point_lig)
+        lig = normalize_centroid_throwtype(lig, origin_point_lig)
         # print(origin_point_lig)
         cnn_lig = np.zeros((6, 6, 6, 1))
         for atom in lig:
@@ -87,6 +83,27 @@ def prepare_CNN(index, type):
         print('Wrong type!')
 
 
+def create_CNN_train(num):
+    cnn_pro_train = []
+    cnn_lig_train = []
+
+    print('Begin storing train dataset')
+    for i in tqdm(range(1, num + 1)):
+        cnn_pro_train.append(prepare_CNN(i, 'pro'))
+        cnn_lig_train.append(prepare_CNN(i, 'lig'))
+
+
+
+    with open('../data/cnn_data/cnn_pro_train.bin', 'wb') as f:
+        pickle.dump(cnn_pro_train, f)
+    with open('../data/cnn_data/cnn_lig_train.bin', 'wb') as f:
+        pickle.dump(cnn_lig_train, f)
+    print('\nCNN training data stored successfully!\n')
+
+
+
+
+'''
 def create_CNN_train(num):
     cnn_pro_train = []
     cnn_lig_train = []
@@ -134,6 +151,21 @@ def create_CNN_valid(num1, num2):
     with open('../data/cnn_data/cnn_out_valid.bin', 'wb') as f:
         pickle.dump(cnn_out_valid, f)
     print('\nCNN training data stored successfully!\n')
+'''
+
+
+
+
+
+
+
+
+
+############### methods used in lstm/mlp ###############
+def normalize_centroid_keeptype(data, meanpoint):
+    mean = np.append(meanpoint, 0)
+    t = data - mean
+    return t
 
 
 def store_tree():
@@ -142,7 +174,7 @@ def store_tree():
         for i in tqdm(range(1, 3000 + 1)):
             pro = extract_data(i, 'pro')
             origin_point_pro = find_mean_point(pro)
-            pro = transform_data_tree(pro, origin_point_pro)
+            pro = normalize_centroid_keeptype(pro, origin_point_pro)
 
             tree_list.append(build_KDTree(pro))
         pickle.dump(tree_list, f)
@@ -160,7 +192,7 @@ def create_mlp_train(tree_list, N):
         origin_point_pro = find_mean_point(pro)
         # recompute lig coordinates
         lig = extract_data(i, 'lig')
-        lig = transform_data_tree(lig, origin_point_pro)
+        lig = normalize_centroid_keeptype(lig, origin_point_pro)
 
         train_input.append(find_nearest_atoms_KDTree(tree_list[i - 1], lig, NUM_NEAR))
         train_output.append([1])
@@ -168,7 +200,7 @@ def create_mlp_train(tree_list, N):
         neg_samples = sample_neg(NUM_NEG, i, N)
         for j in neg_samples:
             neg_lig = extract_data(j, 'lig')
-            neg_lig = transform_data_tree(neg_lig, origin_point_pro)
+            neg_lig = normalize_centroid_keeptype(neg_lig, origin_point_pro)
             train_input.append(find_nearest_atoms_KDTree(tree_list[i - 1], neg_lig, NUM_NEAR))
             train_output.append([-1])
 
@@ -191,7 +223,7 @@ def create_mlp_valid(tree_list, begin=2700, end=3000):
         for j in range(begin+1, end+1):
             # recompute lig coordinates
             lig = extract_data(j, 'lig')
-            lig = transform_data_tree(lig, origin_point_pro)
+            lig = normalize_centroid_keeptype(lig, origin_point_pro)
             valid_input.append(find_nearest_atoms_KDTree(tree_list[i - 1], lig, NUM_NEAR))
 
             if i == j:
@@ -205,45 +237,20 @@ def create_mlp_valid(tree_list, begin=2700, end=3000):
 
 if __name__ == '__main__':
 
+    # 1. Prepare CNN data
+    create_CNN_train(3000)
+
+
+
+
+
     #store_tree()
 
-    with open('../data/middle_data/tree_list.bin', 'rb') as f:
-         tree_list = pickle.load(f)
-    print('Tree info loaded successfully!')
-
-    create_mlp_train(tree_list, 2700)
-
-
-    """
-    create_CNN_train(3000)
-    create_CNN_valid(2990, 3000)
-
-    with open('../data/middle_data/train_input.bin', 'rb') as f:
-        train_input = pickle.load(f)
-    with open('../data/middle_data/train_output.bin', 'rb') as f:
-        train_output = pickle.load(f)
-    with open('../data/middle_data/valid_input.bin', 'rb') as f:
-        valid_input = pickle.load(f)
-    with open('../data/middle_data/valid_output.bin', 'rb') as f:
-        valid_output = pickle.load(f)
-    print('Data info loaded successfully!')
-
-    for i in range(len(valid_input)):
-        print(i)
-        print(valid_input[i])
-        if i > 5:
-            break
-
-    pass
-
-    print('\n\n*****************************************\nThe KDTree answer is:\n')
-    output = find_nearest_atoms_KDTree(t, lig, 3)
-    print(np.array(output))
-
-    print("\n\n*****************************************\nThe YMT's answer is:\n")
-    print(find_nearest_atoms_YMT(pro, lig, 3))
-    """
-
+    # with open('../data/middle_data/tree_list.bin', 'rb') as f:
+    #      tree_list = pickle.load(f)
+    # print('Tree info loaded successfully!')
+    #
+    # create_mlp_train(tree_list, 2700)
 
 
 

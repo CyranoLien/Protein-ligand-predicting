@@ -1,15 +1,11 @@
-import pickle
-import numpy as np
 import matplotlib.pyplot as plt
 from keras.optimizers import Adam
 from keras.models import Sequential
 from keras.layers import Dense, Masking
 from keras.preprocessing import sequence
 from MyFlatten import MyFlatten
-from pandas.core.frame import DataFrame
-import heapq
-from preprocess import *
-from pretest import *
+from preprocess_train import *
+from preprocess_test import *
 
 def create_clique_data():
 
@@ -50,23 +46,24 @@ def create_clique_data():
         new_valid_input.append(temp)
         new_valid_output.append([valid_output[i]])
 
+
     for i in range(len(test_input)):
-        lig = valid_input[i]
+        lig = test_input[i]
         temp = lig.reshape(len(lig) * 20, 1)
         new_test_input.append(temp)
 
-    return np.array(new_train_input), np.array(new_train_output), np.array(new_valid_input), np.array(new_valid_output), \
+    return np.array(new_train_input), np.array(new_train_output), np.array(new_valid_input), np.array(new_valid_output),\
            np.array(new_test_input)
 
 def model_mlp():
     model = Sequential()
     model.add(Masking(mask_value=-999, batch_input_shape=(1, 200, 1)))
-    model.add(Dense(200, activation='relu'))
-    model.add(Dense(10, activation='relu'))
+    model.add(Dense(100, activation='relu'))
+    model.add(Dense(50, activation='relu'))
+    model.add(Dense(20, activation='relu'))
     model.add(MyFlatten())
     model.add(Dense(1, activation='tanh'))
     return model
-
 
 if __name__ == '__main__':
 
@@ -79,9 +76,14 @@ if __name__ == '__main__':
     x_test = sequence.pad_sequences(x_test, maxlen=200, padding='post', dtype=float, value=-999)
 
     model = model_mlp()
+
     adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.00005)
     model.compile(loss='mean_squared_error', optimizer=adam, metrics=['accuracy'])
     history = model.fit(x=x_train, y=y_train, epochs=10, batch_size=1, verbose=1, validation_data=(x_valid, y_valid))
+
+    filename = 'mlp_model.h5'
+    model.save_weights(filename)
+    #model.load_weights(filename)
 
     # plot loss
     train_loss = history.history['loss']
@@ -97,7 +99,7 @@ if __name__ == '__main__':
     plt.legend()
     plt.grid()
     plt.savefig('../data/result/mlp_validation.jpg', dpi=200)
-
+    
     #predict validation data
     predicted_mlp = model.predict(x_valid, batch_size=1)
 
@@ -151,4 +153,5 @@ if __name__ == '__main__':
     np.savetxt('../data/result/test_predictions_mlp.txt', result, delimiter='\t', newline='\n', comments='',
                header='pro_id\tlig1_id\tlig2_id\tlig3_id\tlig4_id\tlig5_id\tlig6_id\tlig7_id\tlig8_id\tlig9_id\tlig10_id',
                fmt='%d')
+
 

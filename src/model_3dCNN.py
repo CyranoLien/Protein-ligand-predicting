@@ -4,9 +4,18 @@ from keras.optimizers import Adam
 from keras.models import Model
 from keras.layers import Activation, BatchNormalization, concatenate, Dense, Input, MaxPooling3D, Flatten
 from keras.layers.convolutional import Conv3D
+from preprocess_train import sample_neg
 import heapq
-from sklearn.metrics import mean_squared_error
-import pretest
+
+NUM_NEG = 2
+NUM_TRAIN = 3000
+NUM_VALID = 30
+NUM_TEST = 824
+
+PATH_cnn_pro_train = '../data/cnn_data/cnn_pro_train.bin'
+PATH_cnn_lig_train = '../data/cnn_data/cnn_lig_train.bin'
+PATH_cnn_pro_test = '../data/cnn_data/cnn_pro_test.bin'
+PATH_cnn_lig_test = '../data/cnn_data/cnn_lig_test.bin'
 
 
 def model_3dcnn(proshape, ligshape):
@@ -36,55 +45,151 @@ def model_3dcnn(proshape, ligshape):
     x = Flatten()(x)
     x = Dense(32, activation='relu')(x)
 
-    output = Dense(1, activation='tanh')(x)
+    output = Dense(1, activation='tanh', name='result')(x)
     model = Model(inputs=[pro, lig], output=output)
     adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.00005)
     model.compile(loss='mean_squared_error', optimizer=adam, metrics=['accuracy'])
     return model
 
 
+def cnn_train_generator(cnn_pro_train, cnn_lig_train):
+    for i in range(len(cnn_pro_train)):
+        x1 = np.array([cnn_pro_train[i]])
+        x2 = np.array([cnn_lig_train[i]])
+        result = np.array([1])
+        yield ({'pro': x1, 'lig': x2}, {'result': result})
+
+        indexes_neg = sample_neg(NUM_NEG, i, NUM_TRAIN-1)
+        for sample in indexes_neg:
+            x2 = np.array([cnn_lig_train[sample]])
+            result = np.array([-1])
+            yield ({'pro': x1, 'lig': x2}, {'result': result})
+            #yield [np.array(cnn_pro_train[i]), np.array(cnn_lig_train[sample])]
+    pass
+
+
+def cnn_valid_generator(cnn_pro_valid, cnn_lig_valid):
+    for i in range(len(cnn_pro_valid)):
+        for j in range(len(cnn_lig_valid)):
+            x1 = np.array([cnn_pro_valid[i]])
+            x2 = np.array([cnn_lig_valid[j]])
+            yield ({'pro': x1, 'lig': x2})
+    pass
+
+
+def lets_train_cnn(filename):
+    with open(PATH_cnn_pro_train, 'rb') as f:
+        cnn_pro_train = np.array(pickle.load(f))
+    with open(PATH_cnn_lig_train, 'rb') as f:
+        cnn_lig_train = np.array(pickle.load(f))
+    gen_train = cnn_train_generator(cnn_pro_train[:NUM_TRAIN], cnn_lig_train[:NUM_TRAIN])
+
+
+    cnn_out_train = np.array([[1], [-1], [-1]]*NUM_TRAIN)
+    cnn_out_valid = np.eye(NUM_VALID).reshape(pow(NUM_VALID, 2),1)
+
+    print(type(next(gen_train)[0]))
+
+    model = model_3dcnn([27, 27, 27, 1], [6, 6, 6, 1])
+
+    hist = model.fit_generator(gen_train, steps_per_epoch=NUM_TRAIN*3, epochs=1)
+
+    model.save_weights(filename)
+
+
+def lest_valid_cnn(filename):
+    with open(PATH_cnn_pro_train, 'rb') as f:
+        cnn_pro_train = np.array(pickle.load(f))
+    with open(PATH_cnn_lig_train, 'rb') as f:
+        cnn_lig_train = np.array(pickle.load(f))
+
+    gen_valid = cnn_valid_generator(cnn_pro_train[-NUM_VALID:], cnn_lig_train[-NUM_VALID:])
+
+    model = model_3dcnn([27, 27, 27, 1], [6, 6, 6, 1])
+    model.load_weights(filename)
+
+    predicted_cnn = model.predict_generator(gen_valid, steps=pow(NUM_VALID, 2)).reshape(NUM_VALID, NUM_VALID)
+    print(predicted_cnn)
+
+    # save as txt file
+    result = []
+    for i in range(len(predicted_cnn)):
+        a = np.array(predicted_cnn[i, :])
+        line = (heapq.nlargest(2, range(len(a)), a.take))
+        # nlargest function returns value from 0, add 1 to change to start from 1
+        nl = [i + 1 for i in line]
+        nl.append(int(i + 1))
+        nl.reverse()
+        result.append(nl)
+    np.savetxt('../data/result/valid_prediction_cnn.txt', result, delimiter='\t', newline='\n', comments='',
+               header='pro_id\tlig1_id\tlig2_id\tlig3_id\tlig4_id\tlig5_id\tlig6_id\tlig7_id\tlig8_id\tlig9_id\tlig10_id',
+               fmt='%d')
+
+
+def lest_test_cnn(filename):
+    with open(PATH_cnn_pro_test, 'rb') as f:
+        cnn_pro_train = np.array(pickle.load(f))
+    with open(PATH_cnn_lig_test, 'rb') as f:
+        cnn_lig_train = np.array(pickle.load(f))
+
+    gen_valid = cnn_valid_generator(cnn_pro_train[:NUM_TEST], cnn_lig_train[:NUM_TEST])
+
+    model = model_3dcnn([27, 27, 27, 1], [6, 6, 6, 1])
+    model.load_weights(filename)
+
+    predicted_cnn = model.predict_generator(gen_valid, steps=pow(NUM_VALID, 2)).reshape(NUM_VALID, NUM_VALID)
+    print(predicted_cnn)
+
+    # save as txt file
+    result = []
+    for i in range(len(predicted_cnn)):
+        a = np.array(predicted_cnn[i, :])
+        line = (heapq.nlargest(10, range(len(a)), a.take))
+        # nlargest function returns value from 0, add 1 to change to start from 1
+        nl = [i + 1 for i in line]
+        nl.append(int(i + 1))
+        nl.reverse()
+        result.append(nl)
+    np.savetxt('../data/result/test_prediction_cnn.txt', result, delimiter='\t', newline='\n', comments='',
+               header='pro_id\tlig1_id\tlig2_id\tlig3_id\tlig4_id\tlig5_id\tlig6_id\tlig7_id\tlig8_id\tlig9_id\tlig10_id',
+               fmt='%d')
+
+
 if __name__ == '__main__':
 
-    with open('../data/cnn_data/cnn_pro_train.bin', 'rb') as f:
-        cnn_pro_train = np.array(pickle.load(f))
-    with open('../data/cnn_data/cnn_lig_train.bin', 'rb') as f:
-        cnn_lig_train = np.array(pickle.load(f))
-    with open('../data/cnn_data/cnn_out_train.bin', 'rb') as f:
-        cnn_out_train = np.array(pickle.load(f))
+    lets_train_cnn('../model/3d-cnn.h5')
 
-    with open('../data/cnn_data/cnn_pro_valid.bin', 'rb') as f:
-        cnn_pro_valid = np.array(pickle.load(f))
-    with open('../data/cnn_data/cnn_lig_valid.bin', 'rb') as f:
-        cnn_lig_valid = np.array(pickle.load(f))
-    with open('../data/cnn_data/cnn_out_valid.bin', 'rb') as f:
-        cnn_out_valid = np.array(pickle.load(f))
+    # lest_valid_cnn('../model/3d-cnn.h5')
 
-    print(cnn_pro_train.shape)
-    print(cnn_lig_train.shape)
+    # lest_test_cnn('../model/3d-cnn.h5')
 
 
+
+
+
+
+    '''
     model = model_3dcnn([27,27,27,1],[6,6,6,1])
 
-    hist = model.fit(x=[cnn_pro_train, cnn_lig_train], y=cnn_out_train, epochs=1, verbose=1,
-                     validation_data=([cnn_pro_valid, cnn_lig_valid], cnn_out_valid))
+    hist = model.fit(x=[cnn_pro_train, cnn_lig_train], y=cnn_out_train, epochs=1, verbose=1,)
+                     #validation_data=([cnn_pro_valid, cnn_lig_valid], cnn_out_valid))
 
 
-    pretest.create_CNN_test(0,824)
+
+
+    preprocess_test.create_CNN_test(0, 824)
     with open('../data/cnn_data/cnn_pro_test.bin', 'rb') as f:
         cnn_pro_test = np.array(pickle.load(f))
     with open('../data/cnn_data/cnn_lig_test.bin', 'rb') as f:
         cnn_lig_test = np.array(pickle.load(f))
 
     # a = model.predict([cnn_pro_test, cnn_lig_test])
-    # np.savetxt('../data/cnn_data/result.txt', a)
+    # np.savetxt('../data/cnn_data/result.txt', a)'''
 
 
 
-
+    '''
     ###########################################################################
-
-
-
     # get the prediction result of testing data set
     predicted_cnn = model.predict([cnn_pro_test,cnn_lig_test], batch_size=1)
     predicted_cnn = predicted_cnn.reshape(824, 824)
@@ -104,3 +209,4 @@ if __name__ == '__main__':
     np.savetxt('../data/result/test_predictions_cnn.txt', result, delimiter='\t', newline='\n', comments='',
                header='pro_id\tlig1_id\tlig2_id\tlig3_id\tlig4_id\tlig5_id\tlig6_id\tlig7_id\tlig8_id\tlig9_id\tlig10_id',
                fmt='%d')
+    '''
