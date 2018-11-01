@@ -14,20 +14,22 @@ from preprocess import *
 from pretest import *
 
 # Create model
-def create_lstm_model(stateful):
-    ##### YOUR MODEL GOES HERE #####
+def create_lstm_model(state):
     model = Sequential()
     model.add(Masking(mask_value=-999, batch_input_shape=(1, 50, 4)))
     model.add(
-        LSTM(20, stateful=stateful, return_sequences=False, batch_input_shape=(1, 50, 4)))
+        LSTM(20, stateful=state, return_sequences=False, batch_input_shape=(1, 50, 4)))
     model.add(Dense(1))
     return model
 
 
 if __name__ == '__main__':
 
+    # Train the model first
+
     with open('../data/middle_data/train_input.bin', 'rb') as f:
         train_input = np.array(pickle.load(f))
+
     with open('../data/middle_data/train_output.bin', 'rb') as f:
         y_train = np.array(pickle.load(f))
 
@@ -35,13 +37,27 @@ if __name__ == '__main__':
          tree_list = pickle.load(f)
     print('Tree info loaded successfully!')
 
-    valid_input, y_valid = create_mlp_valid(tree_list, 2700)
+    valid_input, y_valid = create_mlp_valid(tree_list, begin=2700, end=3000)
+
+
+
+
+
+
+
+
+
+
 
     with open('../data/middle_data/tree_list_test.bin', 'rb') as f:
          tree_list_test = pickle.load(f)
     print('Tree info loaded successfully!')
 
     test_input = create_mlp_test(tree_list_test)
+
+
+
+
 
     x_train =[]
     for i in range(len(train_input)):
@@ -74,7 +90,7 @@ if __name__ == '__main__':
     y_valid = np.array(y_valid)
 
     # create model
-    model = create_lstm_model(stateful=False)
+    model = create_lstm_model(state=False)
     adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.00005)
     model.compile(loss='mean_squared_error', optimizer=adam)
     history = model.fit(x=x_train, y=y_train, epochs=10, batch_size=32, verbose=1, validation_data=(x_valid, y_valid))
@@ -97,7 +113,7 @@ if __name__ == '__main__':
     plt.savefig('../data/result/lstm_validation.jpg', dpi=200)
 
 
-    #predict validation data
+    # predict validation data
     predicted_lstm = model.predict(x_valid, batch_size=1)
 
     # create answer for validation data

@@ -8,6 +8,7 @@ import heapq
 from sklearn.metrics import mean_squared_error
 import pretest
 
+
 def model_3dcnn(proshape, ligshape):
     pro = Input(shape=proshape, name='pro')
     x1 = Conv3D(32, (5, 5, 5), strides=(2, 2, 2), padding='valid')(pro)
@@ -29,6 +30,7 @@ def model_3dcnn(proshape, ligshape):
     x2 = MaxPooling3D(strides=(2, 2, 2))(x2)
     # (2,2,2)
 
+
     x = concatenate([x1, x2])
     #x = Concatenate(x1, x2)
     x = Flatten()(x)
@@ -36,6 +38,8 @@ def model_3dcnn(proshape, ligshape):
 
     output = Dense(1, activation='tanh')(x)
     model = Model(inputs=[pro, lig], output=output)
+    adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.00005)
+    model.compile(loss='mean_squared_error', optimizer=adam, metrics=['accuracy'])
     return model
 
 
@@ -60,8 +64,7 @@ if __name__ == '__main__':
 
 
     model = model_3dcnn([27,27,27,1],[6,6,6,1])
-    adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.00005)
-    model.compile(loss='mean_squared_error', optimizer=adam, metrics=['accuracy'])
+
     hist = model.fit(x=[cnn_pro_train, cnn_lig_train], y=cnn_out_train, epochs=1, verbose=1,
                      validation_data=([cnn_pro_valid, cnn_lig_valid], cnn_out_valid))
 

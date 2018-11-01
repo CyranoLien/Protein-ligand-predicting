@@ -39,6 +39,17 @@ def transform_data_tree(data, meanpoint):
     return t
 
 
+def sample_neg(num, i, N):
+    # Sample n different ligs
+    flag = True
+    while flag:
+        a = range(1, N + 1)
+        neg_sample = random.sample(a, num)
+        if i not in neg_sample:
+            flag = False
+    return neg_sample
+
+
 def prepare_CNN(index, type):
     if type is 'pro':
         pro = extract_data(index, 'pro')
@@ -74,17 +85,6 @@ def prepare_CNN(index, type):
         return cnn_lig
     else:
         print('Wrong type!')
-
-
-def sample_neg(num, i, N):
-    # Sample n different ligs
-    flag = True
-    while flag:
-        a = range(1, N + 1)
-        neg_sample = random.sample(a, num)
-        if i not in neg_sample:
-            flag = False
-    return neg_sample
 
 
 def create_CNN_train(num):
@@ -179,16 +179,16 @@ def create_mlp_train(tree_list, N):
     print('\ntraining data stored successfully!\n')
 
 
-def create_mlp_valid(tree_list, N):
+def create_mlp_valid(tree_list, begin=2700, end=3000):
     # validation data: store every pair
     valid_input = []
     valid_output = []
-    for i in tqdm(range(N + 1, 3001)):
+    for i in tqdm(range(begin+1, end+1)):
         pro = extract_data(i, 'pro')
         # get pro centroid
         origin_point_pro = find_mean_point(pro)
 
-        for j in range(N + 1, 3001):
+        for j in range(begin+1, end+1):
             # recompute lig coordinates
             lig = extract_data(j, 'lig')
             lig = transform_data_tree(lig, origin_point_pro)
