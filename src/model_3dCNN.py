@@ -1,15 +1,17 @@
 import pickle
+import heapq
 import numpy as np
 from keras.optimizers import Adam
 from keras.models import Model
 from keras.layers import Activation, BatchNormalization, concatenate, Dense, Input, MaxPooling3D, Flatten
 from keras.layers.convolutional import Conv3D
 from preprocess_train import sample_neg
-import heapq
+import matplotlib.pyplot as plt
+
 
 NUM_NEG = 2
 NUM_TRAIN = 3000
-NUM_VALID = 30
+NUM_VALID = 300
 NUM_TEST = 824
 
 PATH_cnn_pro_train = '../data/cnn_data/cnn_pro_train.bin'
@@ -92,9 +94,29 @@ def lets_train_cnn(filename):
 
     model = model_3dcnn([27, 27, 27, 1], [6, 6, 6, 1])
 
-    hist = model.fit_generator(gen_train, steps_per_epoch=NUM_TRAIN*3, epochs=1)
+    history = model.fit_generator(gen_train, steps_per_epoch=NUM_TRAIN*3, epochs=1)
 
     model.save_weights(filename)
+
+    # plot loss
+    train_loss = history.history['loss']
+    valid_loss = history.history['val_loss']
+    plt.figure(figsize=(8, 5))
+    plt.plot(np.arange(1, 10 + 1), train_loss, label='train_loss')
+    plt.plot(np.arange(1, 10 + 1), valid_loss, label='valid_loss')
+    plt.title('Loss vs Epochs in Training and Validation Set for LSTM')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss(MSE)')
+    x_label = range(1, 11)
+    plt.xticks(x_label)
+    plt.legend()
+    plt.grid()
+    plt.savefig('../data/result/lstm_validation.jpg', dpi=200)
+
+
+
+
+
 
 
 def lest_valid_cnn(filename):
@@ -121,9 +143,23 @@ def lest_valid_cnn(filename):
         nl.append(int(i + 1))
         nl.reverse()
         result.append(nl)
-    np.savetxt('../data/result/valid_prediction_cnn.txt', result, delimiter='\t', newline='\n', comments='',
+    np.savetxt('../data/result/valid_predictions_3dcnn.txt', result, delimiter='\t', newline='\n', comments='',
                header='pro_id\tlig1_id\tlig2_id\tlig3_id\tlig4_id\tlig5_id\tlig6_id\tlig7_id\tlig8_id\tlig9_id\tlig10_id',
                fmt='%d')
+
+    # create correct answer for validation data
+    result = []
+    for i in range(300):
+        tmp = []
+        tmp.append(int(i + 1))
+        tmp.append(int(i + 1))
+        result.append(tmp)
+    np.savetxt('../data/result/test_ground_truth_example.txt', result, delimiter='\t', newline='\n', comments='',
+               header='pro_id\tlig_id', fmt='%d')
+
+
+
+
 
 
 def lest_test_cnn(filename):
@@ -150,7 +186,7 @@ def lest_test_cnn(filename):
         nl.append(int(i + 1))
         nl.reverse()
         result.append(nl)
-    np.savetxt('../data/result/test_prediction_cnn.txt', result, delimiter='\t', newline='\n', comments='',
+    np.savetxt('../data/result/test_predictions_cnn.txt', result, delimiter='\t', newline='\n', comments='',
                header='pro_id\tlig1_id\tlig2_id\tlig3_id\tlig4_id\tlig5_id\tlig6_id\tlig7_id\tlig8_id\tlig9_id\tlig10_id',
                fmt='%d')
 

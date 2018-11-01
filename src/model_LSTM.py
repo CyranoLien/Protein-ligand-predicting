@@ -19,7 +19,7 @@ def create_lstm_model(state):
     model.add(Masking(mask_value=-999, batch_input_shape=(1, 50, 4)))
     model.add(
         LSTM(20, stateful=state, return_sequences=False, batch_input_shape=(1, 50, 4)))
-    model.add(Dense(1))
+    model.add(Dense(1), activation='tanh')
     return model
 
 
@@ -30,18 +30,18 @@ if __name__ == '__main__':
     with open('../data/middle_data/train_input.bin', 'rb') as f:
         train_input = np.array(pickle.load(f))
 
+
+
     with open('../data/middle_data/train_output.bin', 'rb') as f:
         y_train = np.array(pickle.load(f))
 
+
     with open('../data/middle_data/tree_list.bin', 'rb') as f:
-         tree_list = pickle.load(f)
+        tree_list = pickle.load(f)
     print('Tree info loaded successfully!')
 
+
     valid_input, y_valid = create_mlp_valid(tree_list, begin=2700, end=3000)
-
-
-
-
 
 
     with open('../data/middle_data/tree_list_test.bin', 'rb') as f:
@@ -49,7 +49,6 @@ if __name__ == '__main__':
     print('Tree info loaded successfully!')
 
     test_input = create_mlp_test(tree_list_test)
-
 
 
 
@@ -84,6 +83,12 @@ if __name__ == '__main__':
     x_test = sequence.pad_sequences(x_test, maxlen=50, padding='post', dtype=float, value=-999)
     y_valid = np.array(y_valid)
 
+    print(x_train.shape)
+    print(x_valid.shape)
+    print(x_test.shape)
+    print(y_valid.shape)
+
+
     # create model
     model = create_lstm_model(state=False)
     adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.00005)
@@ -93,8 +98,7 @@ if __name__ == '__main__':
     # plot loss
     train_loss = history.history['loss']
     valid_loss = history.history['val_loss']
-    # loss = np.sqrt(loss)
-    # val_loss = np.sqrt(val_loss)
+
     plt.figure(figsize=(8, 5))
     plt.plot(np.arange(1, 10 + 1), train_loss, label='train_loss')
     plt.plot(np.arange(1, 10 + 1), valid_loss, label='valid_loss')

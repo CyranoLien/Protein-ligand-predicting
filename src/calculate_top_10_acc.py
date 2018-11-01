@@ -2,7 +2,7 @@ import numpy as np
 import sys
 
 ground_truth_filename = '../data/result/test_ground_truth_example.txt'
-predictions_filename = '../data/result/test_predictions_mlp_example.txt'
+predictions_filename = '../data/result/test_predictions_3dcnn_example.txt'
 
 ground_truth_arr = np.loadtxt(ground_truth_filename, dtype=np.int, delimiter='\t', skiprows=1)
 predictions_arr = np.loadtxt(predictions_filename, dtype=np.int, delimiter='\t', skiprows=1)

@@ -81,7 +81,7 @@ if __name__ == '__main__':
     model.compile(loss='mean_squared_error', optimizer=adam, metrics=['accuracy'])
     history = model.fit(x=x_train, y=y_train, epochs=10, batch_size=1, verbose=1, validation_data=(x_valid, y_valid))
 
-    filename = 'mlp_model.h5'
+    filename = '../model/mlp.h5'
     model.save_weights(filename)
     #model.load_weights(filename)
 
