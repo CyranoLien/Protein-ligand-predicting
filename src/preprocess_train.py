@@ -1,6 +1,5 @@
 import pickle
 import random
-import numpy as np
 from kdtree import *
 from read_pdb_file import read_pdb
 from tqdm import tqdm
@@ -182,7 +181,7 @@ def store_tree():
     print('Info stored successfully!')
 
 
-def create_mlp_train(tree_list, N):
+def create_mlp_lstm_train(tree_list, N):
     # training data: 1 matched pair and 5 random unmatched pairs
     train_input = []
     train_output = []
@@ -211,7 +210,7 @@ def create_mlp_train(tree_list, N):
     print('\ntraining data stored successfully!\n')
 
 
-def create_mlp_valid(tree_list, begin=2700, end=3000):
+def create_mlp_lstm_valid(tree_list, begin=2700, end=3000):
     # validation data: store every pair
     valid_input = []
     valid_output = []

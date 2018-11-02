@@ -41,14 +41,14 @@ if __name__ == '__main__':
     print('Tree info loaded successfully!')
 
 
-    valid_input, y_valid = create_mlp_valid(tree_list, begin=2700, end=3000)
+    valid_input, y_valid = create_mlp_lstm_valid(tree_list, begin=2700, end=3000)
 
 
     with open('../data/middle_data/tree_list_test.bin', 'rb') as f:
          tree_list_test = pickle.load(f)
     print('Tree info loaded successfully!')
 
-    test_input = create_mlp_test(tree_list_test)
+    test_input = create_mlp_lstm_test(tree_list_test)
 
 
 
@@ -109,7 +109,7 @@ if __name__ == '__main__':
     plt.xticks(x_label)
     plt.legend()
     plt.grid()
-    plt.savefig('../data/result/lstm_validation.jpg', dpi=200)
+    plt.savefig('../figs/lstm_validation.jpg', dpi=200)
 
 
     # predict validation data

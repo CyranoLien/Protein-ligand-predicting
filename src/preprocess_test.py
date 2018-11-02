@@ -135,7 +135,7 @@ def store_tree():
     print('Info stored successfully!')
 
 
-def create_mlp_test(tree_list):
+def create_mlp_lstm_test(tree_list):
     # validation data: store every pair
     test_input = []
 

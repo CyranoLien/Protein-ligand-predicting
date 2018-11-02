@@ -19,13 +19,13 @@ def create_clique_data():
         tree_list = pickle.load(f)
     print('Tree info loaded successfully!')
 
-    valid_input, valid_output = create_mlp_valid(tree_list, 2700)
+    valid_input, valid_output = create_mlp_lstm_valid(tree_list, 2700)
 
     with open('../data/middle_data/tree_list_test.bin', 'rb') as f:
         tree_list_test = pickle.load(f)
     print('Tree info loaded successfully!')
 
-    test_input = create_mlp_test(tree_list_test)
+    test_input = create_mlp_lstm_test(tree_list_test)
 
     new_train_input = []
     new_train_output = []
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     plt.xticks(x_label)
     plt.legend()
     plt.grid()
-    plt.savefig('../data/result/mlp_validation.jpg', dpi=200)
+    plt.savefig('../figs/mlp_validation.jpg', dpi=200)
     
     #predict validation data
     predicted_mlp = model.predict(x_valid, batch_size=1)
