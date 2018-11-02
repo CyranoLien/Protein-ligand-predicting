@@ -10,9 +10,10 @@ import matplotlib.pyplot as plt
 
 
 NUM_NEG = 2
-NUM_TRAIN = 3000
-NUM_VALID = 300
-NUM_TEST = 824
+NUM_TRAIN = 30
+NUM_VALID = 20
+NUM_TEST = 10
+EPOCH = 10
 
 PATH_cnn_pro_train = '../data/cnn_data/cnn_pro_train.bin'
 PATH_cnn_lig_train = '../data/cnn_data/cnn_lig_train.bin'
@@ -55,27 +56,44 @@ def model_3dcnn(proshape, ligshape):
 
 
 def cnn_train_generator(cnn_pro_train, cnn_lig_train):
-    for i in range(len(cnn_pro_train)):
-        x1 = np.array([cnn_pro_train[i]])
-        x2 = np.array([cnn_lig_train[i]])
-        result = np.array([1])
-        yield ({'pro': x1, 'lig': x2}, {'result': result})
-
-        indexes_neg = sample_neg(NUM_NEG, i, NUM_TRAIN-1)
-        for sample in indexes_neg:
-            x2 = np.array([cnn_lig_train[sample]])
-            result = np.array([-1])
+    while True:
+        for i in range(len(cnn_pro_train)):
+            x1 = np.array([cnn_pro_train[i]])
+            x2 = np.array([cnn_lig_train[i]])
+            result = np.array([1])
             yield ({'pro': x1, 'lig': x2}, {'result': result})
-            #yield [np.array(cnn_pro_train[i]), np.array(cnn_lig_train[sample])]
+
+            indexes_neg = sample_neg(NUM_NEG, i, NUM_TRAIN - 1)
+            for sample in indexes_neg:
+                x2 = np.array([cnn_lig_train[sample]])
+                result = np.array([-1])
+                yield ({'pro': x1, 'lig': x2}, {'result': result})
+                # yield [np.array(cnn_pro_train[i]), np.array(cnn_lig_train[sample])]
     pass
 
 
 def cnn_valid_generator(cnn_pro_valid, cnn_lig_valid):
-    for i in range(len(cnn_pro_valid)):
-        for j in range(len(cnn_lig_valid)):
-            x1 = np.array([cnn_pro_valid[i]])
-            x2 = np.array([cnn_lig_valid[j]])
-            yield ({'pro': x1, 'lig': x2})
+    while True:
+        for i in range(len(cnn_pro_valid)):
+            for j in range(len(cnn_lig_valid)):
+                x1 = np.array([cnn_pro_valid[i]])
+                x2 = np.array([cnn_lig_valid[j]])
+                if i ==j :
+                    result = np.array([1])
+                    yield ({'pro': x1, 'lig': x2}, {'result': result})
+                else:
+                    result = np.array([-1])
+                    yield ({'pro': x1, 'lig': x2}, {'result': result})
+    pass
+
+
+def cnn_test_generator(cnn_pro_test, cnn_lig_test):
+    while True:
+        for i in range(len(cnn_pro_test)):
+            for j in range(len(cnn_lig_test)):
+                x1 = np.array([cnn_pro_test[i]])
+                x2 = np.array([cnn_lig_test[j]])
+                yield ({'pro': x1, 'lig': x2})
     pass
 
 
@@ -86,6 +104,14 @@ def lets_train_cnn(filename):
         cnn_lig_train = np.array(pickle.load(f))
     gen_train = cnn_train_generator(cnn_pro_train[:NUM_TRAIN], cnn_lig_train[:NUM_TRAIN])
 
+    with open(PATH_cnn_pro_train, 'rb') as f:
+        cnn_pro_train = np.array(pickle.load(f))
+    with open(PATH_cnn_lig_train, 'rb') as f:
+        cnn_lig_train = np.array(pickle.load(f))
+
+    gen_valid = cnn_valid_generator(cnn_pro_train[-NUM_VALID:], cnn_lig_train[-NUM_VALID:])
+
+
 
     cnn_out_train = np.array([[1], [-1], [-1]]*NUM_TRAIN)
     cnn_out_valid = np.eye(NUM_VALID).reshape(pow(NUM_VALID, 2),1)
@@ -94,7 +120,7 @@ def lets_train_cnn(filename):
 
     model = model_3dcnn([27, 27, 27, 1], [6, 6, 6, 1])
 
-    history = model.fit_generator(gen_train, steps_per_epoch=NUM_TRAIN*3, epochs=1)
+    history = model.fit_generator(gen_train, steps_per_epoch=NUM_TRAIN*3, epochs=EPOCH, validation_data=gen_valid, validation_steps=NUM_TRAIN*3)
 
     model.save_weights(filename)
 
@@ -102,21 +128,17 @@ def lets_train_cnn(filename):
     train_loss = history.history['loss']
     valid_loss = history.history['val_loss']
     plt.figure(figsize=(8, 5))
-    plt.plot(np.arange(1, 10 + 1), train_loss, label='train_loss')
-    plt.plot(np.arange(1, 10 + 1), valid_loss, label='valid_loss')
-    plt.title('Loss vs Epochs in Training and Validation Set for LSTM')
+    plt.plot(np.arange(1, EPOCH + 1), train_loss, label='train_loss')
+    plt.plot(np.arange(1, EPOCH + 1), valid_loss, label='valid_loss')
+    plt.title('Loss vs Epochs in Training and Validation Set for 3D-CNN')
     plt.xlabel('Epochs')
     plt.ylabel('Loss(MSE)')
+
     x_label = range(1, 11)
     plt.xticks(x_label)
     plt.legend()
     plt.grid()
-    plt.savefig('../data/result/lstm_validation.jpg', dpi=200)
-
-
-
-
-
+    plt.savefig('../figs/3dcnn_validation.jpg', dpi=200)
 
 
 def lest_valid_cnn(filename):
@@ -125,7 +147,7 @@ def lest_valid_cnn(filename):
     with open(PATH_cnn_lig_train, 'rb') as f:
         cnn_lig_train = np.array(pickle.load(f))
 
-    gen_valid = cnn_valid_generator(cnn_pro_train[-NUM_VALID:], cnn_lig_train[-NUM_VALID:])
+    gen_valid = cnn_test_generator(cnn_pro_train[-NUM_VALID:], cnn_lig_train[-NUM_VALID:])
 
     model = model_3dcnn([27, 27, 27, 1], [6, 6, 6, 1])
     model.load_weights(filename)
@@ -158,17 +180,13 @@ def lest_valid_cnn(filename):
                header='pro_id\tlig_id', fmt='%d')
 
 
-
-
-
-
 def lest_test_cnn(filename):
     with open(PATH_cnn_pro_test, 'rb') as f:
         cnn_pro_train = np.array(pickle.load(f))
     with open(PATH_cnn_lig_test, 'rb') as f:
         cnn_lig_train = np.array(pickle.load(f))
 
-    gen_valid = cnn_valid_generator(cnn_pro_train[:NUM_TEST], cnn_lig_train[:NUM_TEST])
+    gen_valid = cnn_test_generator(cnn_pro_train[:NUM_TEST], cnn_lig_train[:NUM_TEST])
 
     model = model_3dcnn([27, 27, 27, 1], [6, 6, 6, 1])
     model.load_weights(filename)
@@ -186,18 +204,22 @@ def lest_test_cnn(filename):
         nl.append(int(i + 1))
         nl.reverse()
         result.append(nl)
-    np.savetxt('../data/result/test_predictions_cnn.txt', result, delimiter='\t', newline='\n', comments='',
+    np.savetxt('../data/result/test_predictions_3dcnn.txt', result, delimiter='\t', newline='\n', comments='',
                header='pro_id\tlig1_id\tlig2_id\tlig3_id\tlig4_id\tlig5_id\tlig6_id\tlig7_id\tlig8_id\tlig9_id\tlig10_id',
                fmt='%d')
 
 
 if __name__ == '__main__':
 
+
+    print('lets train cnn！')
     lets_train_cnn('../model/3d-cnn.h5')
 
+    # print('lets valid cnn！')
     # lest_valid_cnn('../model/3d-cnn.h5')
 
-    # lest_test_cnn('../model/3d-cnn.h5')
+    print('lets test cnn！')
+    lest_test_cnn('../model/3d-cnn.h5')
 
 
 
