@@ -1,11 +1,12 @@
 # Protein-ligand-predicting
 
-###############################################  
-CS5242 Neural Network and Deep Learning Team 23  
-Lian Yiming & Yan Maitong  
-###############################################  
 
-## Step 1: Run preprocess_train.py and preprocess_test.py
+CS5242 Neural Network and Deep Learning  
+    
+Team 23: Lian Yiming & Yan Maitong  
+
+
+## Step 1: Run preprocess_train.py & preprocess_test.py
 
 For training data,  
 The first python file will call `store_tree()` function to generate the `tree_list.bin` in in `data/middle_data` folder;  
